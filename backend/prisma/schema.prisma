@@ -6,9 +6,67 @@ datasource db {
   provider = "sqlite"
 }
 
+enum MediaType {
+  MOVIE
+  ANIME
+  GAME
+  MANGA
+}
+
+enum MediaStatus {
+  PLANNED
+  WATCHING
+  COMPLETED
+  DROPPED
+}
 
 model User {
+  id        Int         @id @default(autoincrement())
+  email     String      @unique
+  createdAt DateTime    @default(now())
+
+  library   UserMedia[]
+  activity  Activity[]
+}
+
+model Media {
+  id          Int         @id @default(autoincrement())
+  type        MediaType
+  title       String
+  posterUrl   String?
+  externalIds Json?
+  createdAt   DateTime    @default(now())
+
+  users       UserMedia[]
+  activity    Activity[]
+}
+
+model UserMedia {
+  id        Int          @id @default(autoincrement())
+  userId    Int
+  mediaId   Int
+
+  status    MediaStatus @default(PLANNED)
+  progress  Int?
+  rating    Int?
+  notes     String?
+
+  addedAt   DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  user      User         @relation(fields: [userId], references: [id])
+  media     Media        @relation(fields: [mediaId], references: [id])
+
+  @@unique([userId, mediaId])
+}
+
+model Activity {
   id        Int      @id @default(autoincrement())
-  email     String   @unique
+  userId    Int
+  mediaId   Int
+  action    String
   createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  media     Media    @relation(fields: [mediaId], references: [id])
 }
